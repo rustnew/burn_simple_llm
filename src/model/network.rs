@@ -14,12 +14,12 @@ pub struct MLPConfig {
 }
 
 impl MLPConfig {
-    pub fn init<B: Backend>(&self) -> MLP<B> {
+    pub fn init<B: Backend>(&self, device: &B::Device) -> MLP<B> {
         MLP {
-            linear1: nn::LinearConfig::new(self.input_size, self.hidden_size).init(),
-            linear2: nn::LinearConfig::new(self.hidden_size, self.output_size).init(),
+            linear1: nn::LinearConfig::new(self.input_size, self.hidden_size).init(device),
+            linear2: nn::LinearConfig::new(self.hidden_size, self.output_size).init(device),
             dropout: nn::DropoutConfig::new(self.dropout).init(),
-            activation: nn::ReLU::new(),
+            activation: nn::Relu::new(),
         }
     }
 }
@@ -29,7 +29,7 @@ pub struct MLP<B: Backend> {
     linear1: nn::Linear<B>,
     linear2: nn::Linear<B>,
     dropout: nn::Dropout,
-    activation: nn::ReLU,
+    activation: nn::Relu,
 }
 
 impl<B: Backend> MLP<B> {

@@ -1,8 +1,11 @@
+
+// loader.rs
 use burn::{
-    data::{dataloader::batcher::Batcher, dataset::Dataset},
-    tensor::{backend::Backend, Data, Tensor},
+    data::dataloader::batcher::Batcher,
+    tensor::{backend::Backend, Tensor},
 };
 
+#[derive(Clone , Debug)]
 pub struct MnistBatcher<B: Backend> {
     device: B::Device,
 }
@@ -19,25 +22,23 @@ pub struct MnistItem {
     pub label: usize,
 }
 
-impl<B: Backend> Batcher<MnistItem, MnistBatch<B>> for MnistBatcher<B> {
-    fn batch(&self, items: Vec<MnistItem>) -> MnistBatch<B> {
-        let images = items
-            .iter()
-            .map(|item| Data::<f32, 2>::from(item.image.clone()))
-            .map(|data| Tensor::<B, 2>::from_data(data.convert(), &self.device))
-            .collect();
-
-        let targets = items
-            .iter()
-            .map(|item| Tensor::<B, 1>::from_data(Data::from([item.label as i64]), &self.device))
-            .collect();
-
-        MnistBatch { images, targets }
-    }
+#[derive(Debug, Clone)]
+pub struct MnistBatch<B: Backend> {
+    pub images: Tensor<B, 3>,
+    pub targets: Tensor<B, 1, burn::tensor::Int>,
 }
 
-#[derive(Debug)]
-pub struct MnistBatch<B: Backend> {
-    pub images: Vec<Tensor<B, 2>>,
-    pub targets: Vec<Tensor<B, 1>>,
+// Fix: Correct Batcher implementation with 3 parameters
+impl<B: Backend> Batcher<B, MnistItem, MnistBatch<B>> for MnistBatcher<B> {
+    fn batch(&self, items: Vec<MnistItem>, device: &B::Device) -> MnistBatch<B> {
+        let images = items.iter().flat_map(|item| item.image.clone()).collect::<Vec<_>>();
+        let labels = items.iter().map(|item| item.label as i64).collect::<Vec<_>>();
+
+        MnistBatch {
+            // Fix: Convert Vec to slice reference for TensorData
+            images: Tensor::from_floats(images.as_slice(), device)
+                .reshape([items.len(), 28, 28]),
+            targets: Tensor::from_ints(labels.as_slice(), device),
+        }
+    }
 }

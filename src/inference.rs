@@ -5,7 +5,7 @@ use burn::{
 
 use crate::model::network::MLP;
 
-pub fn infer<B: Backend>(
+/*pub fn infer<B: Backend>(
     model: &MLP<B>,
     input: Tensor<B, 2>,
 ) -> Tensor<B, 1> {
@@ -13,5 +13,5 @@ pub fn infer<B: Backend>(
     let output = model.forward(input);
     
     // Convertir les logits en prédictions
-    output.argmax(1)
-}
+   // output.argmax(1)
+}*/
